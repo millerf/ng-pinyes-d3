@@ -1,5 +1,5 @@
 {
-  "name": "ng-pynies-d3",
+  "name": "ng-pinyes-d3",
   "version": "0.0.1",
   "peerDependencies": {
     "@angular/common": "^8.1.1",

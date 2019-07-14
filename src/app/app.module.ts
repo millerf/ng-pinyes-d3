@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import {NgPyniesD3Module} from '../../projects/ng-pynies-d3/src/lib/ng-pynies-d3.module';
+import {NgPinyesD3Module} from '../../projects/ng-pinyes-d3/src/lib/ng-pinyes-d3.module';
 
 @NgModule({
   declarations: [
@@ -12,7 +12,7 @@ import {NgPyniesD3Module} from '../../projects/ng-pynies-d3/src/lib/ng-pynies-d3
   imports: [
     BrowserModule,
     AppRoutingModule,
-    NgPyniesD3Module
+    NgPinyesD3Module
   ],
   providers: [],
   bootstrap: [AppComponent]

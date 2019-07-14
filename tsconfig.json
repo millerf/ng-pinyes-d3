@@ -19,11 +19,11 @@
       "dom"
     ],
     "paths": {
-      "ng-pynies-d3": [
-        "dist/ng-pynies-d3"
+      "ng-pinyes-d3": [
+        "dist/ng-pinyes-d3"
       ],
-      "ng-pynies-d3/*": [
-        "dist/ng-pynies-d3/*"
+      "ng-pinyes-d3/*": [
+        "dist/ng-pinyes-d3/*"
       ]
     }
   },

@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
-  "dest": "../../dist/ng-pynies-d3",
+  "dest": "../../dist/ng-pinyes-d3",
   "lib": {
     "entryFile": "src/public-api.ts"
   }

@@ -10,7 +10,7 @@ describe('workspace-project App', () => {
 
   it('should display welcome message', () => {
     page.navigateTo();
-    expect(page.getTitleText()).toEqual('Welcome to ng-pynies-d3-app!');
+    expect(page.getTitleText()).toEqual('Welcome to ng-pinyes-d3-app!');
   });
 
   afterEach(async () => {

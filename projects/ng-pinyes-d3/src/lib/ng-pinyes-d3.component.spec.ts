@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { NgPyniesD3Component } from './ng-pynies-d3.component';
+import { NgPinyesD3Component } from './ng-pinyes-d3.component';
 
 describe('NgPyniesD3Component', () => {
-  let component: NgPyniesD3Component;
-  let fixture: ComponentFixture<NgPyniesD3Component>;
+  let component: NgPinyesD3Component;
+  let fixture: ComponentFixture<NgPinyesD3Component>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ NgPyniesD3Component ]
+      declarations: [ NgPinyesD3Component ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(NgPyniesD3Component);
+    fixture = TestBed.createComponent(NgPinyesD3Component);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
