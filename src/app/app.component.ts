@@ -26,16 +26,34 @@ export class AppComponent {
       dreta: [new Casteller(), new Casteller(), new Casteller()],
       esquerra: [new Casteller(), new Casteller(), new Casteller()]
     };
-    const sp2 = {...sp}
-    sp2.baix = null;
-    this.pinya.sections = [sp, sp2];
+
+    const sp2 = new SectionPinya();
+    sp2.agulla = new Casteller();
+    sp2.baix = new Casteller();
+    sp2.contrafort = new Casteller();
+    sp2.crosses = {dreta: new Casteller(), esquerra: new Casteller()};
+    sp2.vents = [new Casteller(), new Casteller(), new Casteller(), new Casteller()];
+    sp2.mans = [new Casteller(), new Casteller(), new Casteller(), new Casteller()];
+    sp2.laterals = {
+      dreta: [new Casteller(), new Casteller(), new Casteller()],
+      esquerra: [new Casteller(), new Casteller(), new Casteller()]
+    };
+
+
+    this.pinya.sections = [sp, sp2, {...sp2}];
 
     setTimeout(()=> {
       sp.mans[1].name = 'dwqwdw';
-      sp.mans[0].id = 12332
+      sp.mans[0].id = 12332;
       sp.mans[0] = {...sp.mans[0]}
       this.pinya = {...this.pinya};
     }, 2000)
+
+    setTimeout(()=> {
+      sp.vents = sp.vents.slice(2,4);
+      console.info(sp.vents);
+      this.pinya = {...this.pinya};
+    }, 4000)
   }
 
 }

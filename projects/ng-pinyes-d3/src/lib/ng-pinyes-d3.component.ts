@@ -1,6 +1,7 @@
 import {Component, Input, OnInit} from '@angular/core';
 import * as d3 from 'd3';
 import {Casteller, PinyaCastells, SectionPinya} from './pinya.model';
+import {resolveTxt} from 'dns';
 
 @Component({
   selector: 'ng-pinyes-d3',
@@ -18,6 +19,7 @@ export class NgPinyesD3Component implements OnInit {
   @Input() fillColor = '#FFF';
   @Input() strokeColor = '911305';
   @Input() strokeWidth = 2;
+  @Input() borderCurve = 5;
   idRandom;
   firsDraw = true;
   rect_width = 100;
@@ -71,7 +73,6 @@ export class NgPinyesD3Component implements OnInit {
 
   private updatePinya() {
     if (this.firsDraw) {
-      console.info('first draw');
       this.pinya.sections.forEach((section, i) => {
         let group = this.g.append('g').attr('id', 'main'+i);
         this._add_point_filler(group);
@@ -100,7 +101,6 @@ export class NgPinyesD3Component implements OnInit {
         }, 50)
       });
     } else {
-      console.info('first draw');
       this.pinya.sections.forEach((section, i) => {
         let group = this.g.select('g#main'+i);
         let group_vents = this.g.select('g#vents'+i);
@@ -239,22 +239,34 @@ export class NgPinyesD3Component implements OnInit {
   private drawCasteller(unique_selector,
                         container,
                         data: Casteller[],
-                        x, y,
+                        x: number | ((Casteller, number) => number),
+                        y: number | ((Casteller, number) => number),
                         height: number | ((Casteller, number) => number) = this.rect_height,
                         width: number | ((Casteller, number) => number) = this.rect_width,
                         textReversed = false) {
 
-    const groups = container.append('g')
-      .attr('id', unique_selector)
-      .selectAll('g#' + unique_selector)
-      .data(data)
-      .enter()
+    let groups = container.select('g#' + unique_selector);
+    console.info(groups.empty())
+    if (groups.empty()) {
+      groups = container.append('g').attr('id', unique_selector);
+    }
 
-    groups.append('rect')
+    const rectangles = groups.selectAll('rect')
+      .data(data)
+
+    //Remove old
+    rectangles.exit().remove()
+
+    // Update exiting
+    rectangles.attr('id', (d: Casteller) => d ? 'casteller_' + d.id : null)
+
+    // Create new
+    rectangles.enter()
+      .append('rect')
       .attr('x', x)
       .attr('y', y)
-      .attr('rx', 5)
-      .attr('ry', 5)
+      .attr('rx', this.borderCurve)
+      .attr('ry', this.borderCurve)
       .attr('width', width)
       .attr('height', height)
       .attr('id', (d: Casteller) => d ? 'casteller_' + d.id : null)
@@ -263,7 +275,19 @@ export class NgPinyesD3Component implements OnInit {
       .style('stroke-width', this.strokeWidth);
 
 
-    groups.append('text')
+    const texts = groups.selectAll('text')
+      .data(data);
+
+    //Remove old
+    texts.exit().remove();
+
+    // Update exiting
+    texts.text((d: Casteller) => {console.info(d);return d.name + ' ' + d.id;})
+
+    // Create new
+    texts
+      .enter()
+      .append('text')
       .attr('x', (d, i) => {
         return (typeof x == 'function' ? x(d, i) : x) +
           (typeof width == 'function' ? width(d, i) : width) / 2;
@@ -273,7 +297,7 @@ export class NgPinyesD3Component implements OnInit {
           (typeof height == 'function' ? height(d, i) : height) / 2;
       })
       .attr('text-anchor', 'middle')
-      .text((d: Casteller) => d.name + ' ' + d.id)
+      .text((d: Casteller) => {console.info(d);return d.name + ' ' + d.id;})
       .style('transform-origin', !textReversed ? '' : 'center center')
       .style('transform-box', !textReversed ? '' : 'fill-box');
     setTimeout(() => {
