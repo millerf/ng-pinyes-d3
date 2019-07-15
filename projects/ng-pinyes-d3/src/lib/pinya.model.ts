@@ -9,11 +9,15 @@ export class PinyaCastells {
 export class SectionPinya {
   contrafort: Casteller;
   baix: Casteller;
+  agulla: Casteller;
   crosses: {
     dreta: Casteller,
     esquerra: Casteller
   };
-  laterals: Casteller[];
+  laterals: {
+    dreta: Casteller[],
+    esquerra: Casteller[]
+  };
   vents: Casteller[];
   mans: Casteller[];
 
