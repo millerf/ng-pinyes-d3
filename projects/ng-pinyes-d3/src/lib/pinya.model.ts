@@ -25,5 +25,6 @@ export class SectionPinya {
 
 
 export class Casteller {
-  name = 'nombre'
+  id = Math.floor(Math.random() * 10000) + 1;
+  name = 'nombre';
 }

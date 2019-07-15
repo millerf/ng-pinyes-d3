@@ -1,10 +1,12 @@
-import {AfterViewInit, Component, Input, OnInit} from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
 import * as d3 from 'd3';
 import {Casteller, PinyaCastells, SectionPinya} from './pinya.model';
 
 @Component({
   selector: 'ng-pinyes-d3',
   template: `
+    <button (click)="zoomOn()"> zoom {{idRandom}}</button>
+    <br/>
     <svg></svg>
   `,
 })
@@ -13,13 +15,28 @@ export class NgPinyesD3Component implements OnInit {
   svg;
   width = 960;
   height = 960;
-
+  @Input() fillColor = '#FFF';
+  @Input() strokeColor = '911305';
+  @Input() strokeWidth = 2;
+  idRandom;
   rect_width = 100;
   rect_height = 50;
   margin = 5;
   first_margin;
 
-  @Input() pinya: PinyaCastells;
+  private _pinya: PinyaCastells;
+  @Input()
+  set pinya(pinya: PinyaCastells) {
+    this._pinya = pinya;
+
+    if(this.g) {
+      console.info('updated');
+      this.updatePinya();
+    }
+  }
+  get pinya(): PinyaCastells {
+    return this._pinya;
+  }
 
   ngOnInit() {
 
@@ -44,6 +61,15 @@ export class NgPinyesD3Component implements OnInit {
 
 
     this.first_margin = this.rect_height * (this.pinya.sections.length - 1)
+
+    this.idRandom = this.pinya.sections[1].mans[2].id;
+
+    this.updatePinya();
+  }
+
+  private updatePinya() {
+
+    this.g.selectAll("*").remove();
 
     this.pinya.sections.forEach((section, i) => {
       let group = this.g.append('g');
@@ -70,11 +96,12 @@ export class NgPinyesD3Component implements OnInit {
         group_laterals_right.style('transform', 'rotate(' + this._rad_to_deg(angle_laterals) + 'deg)');
         group_laterals_left.style('transform', 'rotate(' + -1 * this._rad_to_deg(angle_laterals) + 'deg)');
       }, 50)
-
-
     });
+  }
 
-
+  public zoomOn() {
+    const element = d3.select('#casteller_' + this.idRandom);
+    element.style('fill', 'green')
   }
 
   private _rad_to_deg(ang_rad: number): number {
@@ -97,25 +124,35 @@ export class NgPinyesD3Component implements OnInit {
   }
 
   private drawAgulla(container, section: SectionPinya) {
-    if( section.agulla) {
+    if (section.agulla) {
       this.drawCasteller(container
         .datum(section.agulla), 0, this.first_margin)
     }
   }
 
   private drawBaix(container, section: SectionPinya) {
-    if( section.baix) {
-      this.drawCasteller(container
-        .datum(section.baix), 0, this.first_margin - (this.rect_height + this.margin));
+    if (section.baix) {
+      this.drawCasteller(container.datum(section.baix),
+        0,
+        this.first_margin - (this.rect_height + this.margin));
     }
   }
 
   private drawCrosses(container, section: SectionPinya) {
     if (section.crosses) {
+      this.drawCasteller(container.datum(section.crosses.dreta),
+        -(this.rect_height + this.margin),
+        this.first_margin,
+        this.rect_width,
+        this.rect_height,
+        true);
       this.drawCasteller(container
-        .datum(section.crosses.dreta), -(this.rect_height + this.margin), this.first_margin, this.rect_width, this.rect_height, true);
-      this.drawCasteller(container
-        .datum(section.crosses.esquerra), this.rect_width + this.margin, this.first_margin, this.rect_width, this.rect_height, true);
+        .datum(section.crosses.esquerra),
+        this.rect_width + this.margin,
+        this.first_margin,
+        this.rect_width,
+        this.rect_height,
+        true);
     }
   }
 
@@ -146,8 +183,8 @@ export class NgPinyesD3Component implements OnInit {
     }
   }
 
-  private drawCasteller(container, x, y, height = this.rect_height, width = this.rect_width, text_reversed = false) {
-    const g = container.append('g')
+  private drawCasteller(container, x, y, height = this.rect_height, width = this.rect_width, textReversed = false) {
+    const g = container.append('g');
 
     g.append('rect')
       .attr('x', x)
@@ -156,22 +193,23 @@ export class NgPinyesD3Component implements OnInit {
       .attr('ry', 5)
       .attr('width', width)
       .attr('height', height)
-      .style('fill', '#FFF')
-      .style('stroke', '#911305')
-      .style('stroke-width', '2')
+      .attr('id', (d: Casteller) => d ? 'casteller_' + d.id : null)
+      .style('fill', this.fillColor)
+      .style('stroke', this.strokeColor)
+      .style('stroke-width', this.strokeWidth);
 
     const text = g.append('text')
       .attr('x', x + width / 2)
       .attr('text-anchor', 'middle')
       .attr('y', y + height / 2)
       .text(function (d: Casteller) {
-        return d.name;
+        return d.name + '\r\n' + d.id;
       });
 
-    if (text_reversed) {
+    if (textReversed) {
       text.style('transform-origin', 'center center');
       text.style('transform-box', 'fill-box');
-      setTimeout( () =>{
+      setTimeout(() => {
         text.style('transform', 'rotate(90deg)');
       })
     }

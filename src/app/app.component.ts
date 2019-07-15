@@ -30,7 +30,12 @@ export class AppComponent {
     sp2.baix = null;
     this.pinya.sections = [sp, sp2];
 
-
+    setTimeout(()=> {
+      sp.mans[1].name = 'dwqwdw';
+      sp.mans[0].id = 12332
+      sp.mans[0] = {...sp.mans[0]}
+      this.pinya = {...this.pinya};
+    }, 2000)
   }
 
 }
