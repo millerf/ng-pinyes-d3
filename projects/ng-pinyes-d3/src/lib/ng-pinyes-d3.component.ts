@@ -19,6 +19,7 @@ export class NgPinyesD3Component implements OnInit {
   @Input() strokeColor = '911305';
   @Input() strokeWidth = 2;
   idRandom;
+  firsDraw = true;
   rect_width = 100;
   rect_height = 50;
   margin = 5;
@@ -69,36 +70,51 @@ export class NgPinyesD3Component implements OnInit {
   }
 
   private updatePinya() {
-
-    this.g.selectAll("*").remove();
-
-    this.pinya.sections.forEach((section, i) => {
-      let group = this.g.append('g');
-      this._add_point_filler(group);
-      this.drawAgulla(group, section);
-      this.drawBaix(group, section);
-      this.drawContrefort(group, section);
-      this.drawMans(group, section);
-      this.drawCrosses(group, section);
-      const group_vents = group.append('g');
-      this._add_point_filler(group_vents);
-      this.drawVents(group_vents, section);
-      const group_laterals_left = group.append('g');
-      this._add_point_filler(group_laterals_left);
-      const group_laterals_right = group.append('g');
-      this._add_point_filler(group_laterals_right);
-      this.drawLaterals(group_laterals_right, group_laterals_left, section);
-
-      setTimeout(() => {
-        const angle = (2 * Math.PI / this.pinya.sections.length) * i;
-        const angle_vents = 2 * Math.PI / (this.pinya.sections.length * 2);
-        const angle_laterals = 2 * Math.PI / (this.pinya.sections.length * 4);
-        group.style('transform', 'translate(' + (this.width / 2 - this.rect_width / 2) + 'px, ' + (this.height / 2) + 'px) rotate(' + this._rad_to_deg(angle) + 'deg)');
-        group_vents.style('transform', 'rotate(' + this._rad_to_deg(angle_vents) + 'deg)');
-        group_laterals_right.style('transform', 'rotate(' + this._rad_to_deg(angle_laterals) + 'deg)');
-        group_laterals_left.style('transform', 'rotate(' + -1 * this._rad_to_deg(angle_laterals) + 'deg)');
-      }, 50)
-    });
+    if (this.firsDraw) {
+      console.info('first draw');
+      this.pinya.sections.forEach((section, i) => {
+        let group = this.g.append('g').attr('id', 'main'+i);
+        this._add_point_filler(group);
+        this.drawAgulla(group, i);
+        this.drawBaix(group, i);
+        this.drawContrefort(group, i);
+        this.drawMans(group, i);
+        this.drawCrosses(group, i);
+        const group_vents = group.append('g').attr('id','vents'+i);
+        this._add_point_filler(group_vents);
+        this.drawVents(group_vents, i);
+        const group_laterals_left = group.append('g').attr('id', 'lateralsleft'+i);
+        this._add_point_filler(group_laterals_left);
+        const group_laterals_right = group.append('g').attr('id', 'lateralsright'+i);
+        this._add_point_filler(group_laterals_right);
+        this.drawLaterals(group_laterals_right, group_laterals_left, i);
+        this.firsDraw = false;
+        setTimeout(() => {
+          const angle = (2 * Math.PI / this.pinya.sections.length) * i;
+          const angle_vents = 2 * Math.PI / (this.pinya.sections.length * 2);
+          const angle_laterals = 2 * Math.PI / (this.pinya.sections.length * 4);
+          group.style('transform', 'translate(' + (this.width / 2 - this.rect_width / 2) + 'px, ' + (this.height / 2) + 'px) rotate(' + this._rad_to_deg(angle) + 'deg)');
+          group_vents.style('transform', 'rotate(' + this._rad_to_deg(angle_vents) + 'deg)');
+          group_laterals_right.style('transform', 'rotate(' + this._rad_to_deg(angle_laterals) + 'deg)');
+          group_laterals_left.style('transform', 'rotate(' + -1 * this._rad_to_deg(angle_laterals) + 'deg)');
+        }, 50)
+      });
+    } else {
+      console.info('first draw');
+      this.pinya.sections.forEach((section, i) => {
+        let group = this.g.select('g#main'+i);
+        let group_vents = this.g.select('g#vents'+i);
+        let group_laterals_right = this.g.select('g#lateralsright'+i);
+        let group_laterals_left = this.g.select('g#lateralsleft'+i);
+        this.drawAgulla(group, i);
+        this.drawBaix(group, i);
+        this.drawContrefort(group, i);
+        this.drawMans(group, i);
+        this.drawCrosses(group, i);
+        this.drawVents(group_vents, i);
+        this.drawLaterals(group_laterals_right, group_laterals_left, i);
+      });
+    }
   }
 
   public zoomOn() {
@@ -125,43 +141,52 @@ export class NgPinyesD3Component implements OnInit {
     this.g.attr('transform', d3.event.transform);
   }
 
-  private drawAgulla(container, section: SectionPinya) {
+  private drawAgulla(container, index: number) {
+    const section = this.pinya.sections[index];
     if (section.agulla) {
-      this.drawCasteller(container,
+      this.drawCasteller('agualla' + index,
+        container,
         [section.agulla],
         0,
         this.first_margin - (this.rect_height + this.margin));
     }
   }
 
-  private drawBaix(container, section: SectionPinya) {
+  private drawBaix(container, index: number) {
+    const section = this.pinya.sections[index];
     if (section.baix) {
-      this.drawCasteller(container,
+      this.drawCasteller('baix' + index,
+        container,
         [section.baix],
         0,
         this.first_margin);
     }
   }
 
-  private drawContrefort(container, section: SectionPinya) {
+  private drawContrefort(container, index: number) {
+    const section = this.pinya.sections[index];
     if (section.contrafort) {
-      this.drawCasteller(container,
+      this.drawCasteller('contrafort' + index,
+        container,
         [section.contrafort],
         0,
         (d, i) => (this.rect_height + this.margin) * (i + 1) + this.first_margin);
     }
   }
 
-  private drawCrosses(container, section: SectionPinya) {
+  private drawCrosses(container, index: number) {
+    const section = this.pinya.sections[index];
     if (section.crosses) {
-      this.drawCasteller(container,
+      this.drawCasteller('cossesdreta' + index,
+        container,
         [section.crosses.dreta],
         -(this.rect_height + this.margin),
         this.first_margin,
         this.rect_width,
         this.rect_height,
         true);
-      this.drawCasteller(container,
+      this.drawCasteller('cossesesquerra' + index,
+        container,
         [section.crosses.esquerra],
         this.rect_width + this.margin,
         this.first_margin,
@@ -171,32 +196,39 @@ export class NgPinyesD3Component implements OnInit {
     }
   }
 
-  private drawMans(container, section: SectionPinya) {
+  private drawMans(container, index: number) {
+    const section = this.pinya.sections[index];
 
-    this.drawCasteller(container,
+    this.drawCasteller('mans' + index,
+      container,
       section.mans,
       0,
       (d, i) => (this.rect_height + this.margin) * (i + 2) + this.first_margin)
   }
 
-  private drawVents(container, section: SectionPinya) {
+  private drawVents(container, index: number) {
 
+    const section = this.pinya.sections[index];
 
-    this.drawCasteller(container,
+    this.drawCasteller('vents' + index,
+      container,
       section.vents,
       0,
       (d, i) => (this.rect_height + this.margin) * (i + 1) + this.first_margin);
   }
 
-  private drawLaterals(container_right, container_left, section: SectionPinya) {
+  private drawLaterals(container_right, container_left, index: number) {
+    const section = this.pinya.sections[index];
     if (section.laterals) {
-      this.drawCasteller(container_right,
+      this.drawCasteller('lateralsdreta' + index,
+        container_right,
         section.laterals.dreta,
         0,
         (d, i) => (this.rect_height + this.margin) * (i + 3) + this.first_margin
       );
 
-      this.drawCasteller(container_left,
+      this.drawCasteller('lateralsesquerra' + index,
+        container_left,
         section.laterals.esquerra,
         0,
         (d, i) => (this.rect_height + this.margin) * (i + 3) + this.first_margin
@@ -204,17 +236,20 @@ export class NgPinyesD3Component implements OnInit {
     }
   }
 
-  private drawCasteller(container,
+  private drawCasteller(unique_selector,
+                        container,
                         data: Casteller[],
                         x, y,
                         height: number | ((Casteller, number) => number) = this.rect_height,
                         width: number | ((Casteller, number) => number) = this.rect_width,
                         textReversed = false) {
 
-    const groups = container.append('g').selectAll('g')
+    const groups = container.append('g')
+      .attr('id', unique_selector)
+      .selectAll('g#' + unique_selector)
       .data(data)
       .enter()
-      .append('g');
+
     groups.append('rect')
       .attr('x', x)
       .attr('y', y)
