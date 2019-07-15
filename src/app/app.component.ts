@@ -26,7 +26,9 @@ export class AppComponent {
       dreta: [new Casteller(), new Casteller(), new Casteller()],
       esquerra: [new Casteller(), new Casteller(), new Casteller()]
     };
-    this.pinya.sections = [sp, {...sp}, {...sp}, {...sp}, ];
+    const sp2 = {...sp}
+    sp2.baix = null;
+    this.pinya.sections = [sp, sp2];
 
 
   }

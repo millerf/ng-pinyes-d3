@@ -25,5 +25,5 @@ export class SectionPinya {
 
 
 export class Casteller {
-  name = 'test'
+  name = 'nombre'
 }

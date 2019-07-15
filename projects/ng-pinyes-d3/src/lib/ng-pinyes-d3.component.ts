@@ -1,6 +1,6 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {AfterViewInit, Component, Input, OnInit} from '@angular/core';
 import * as d3 from 'd3';
-import {PinyaCastells, SectionPinya} from './pinya.model';
+import {Casteller, PinyaCastells, SectionPinya} from './pinya.model';
 
 @Component({
   selector: 'ng-pinyes-d3',
@@ -24,57 +24,40 @@ export class NgPinyesD3Component implements OnInit {
   ngOnInit() {
 
     // Setting two constant attributes.
-    this.svg = d3.select("svg");
+    this.svg = d3.select('svg');
 
-    this.g = this.svg.append("g");
+    this.g = this.svg.append('g');
 
     this.svg
       .attr('width', this.width)
       .attr('height', this.height);
 
-    this.svg
-      .append("line")
-      .attr('stroke', 'red')
-      .attr('x1', 0)
-      .attr('y1', this.height / 2)
-      .attr('x2', this.width)
-      .attr('y2', this.height / 2);
-
-
-    this.svg
-      .append("line")
-      .attr('stroke', 'red')
-      .attr('x1', this.width / 2)
-      .attr('y1', 0)
-      .attr('x2', this.width / 2)
-      .attr('y2', this.height);
-
-    this.svg.append("rect")
-      .attr("fill", "none")
-      .attr("pointer-events", "all")
-      .attr("width", this.width)
-      .attr("height", this.height)
+    this.svg.append('rect')
+      .attr('fill', 'none')
+      .attr('pointer-events', 'all')
+      .attr('width', this.width)
+      .attr('height', this.height)
       .call(d3.zoom()
         .scaleExtent([0, 8])
-        .on("zoom",
+        .on('zoom',
           () => this.zoom()));
 
 
-    this.first_margin = this.rect_height  *(this.pinya.sections.length -1)
+    this.first_margin = this.rect_height * (this.pinya.sections.length - 1)
 
     this.pinya.sections.forEach((section, i) => {
-      let group = this.g.append("g");
+      let group = this.g.append('g');
       this._add_point_filler(group);
       this.drawBaix(group, section);
       this.drawAgulla(group, section);
       this.drawMans(group, section);
       this.drawCrosses(group, section);
-      const group_vents = group.append("g");
+      const group_vents = group.append('g');
       this._add_point_filler(group_vents);
       this.drawVents(group_vents, section);
-      const group_laterals_left = group.append("g");
+      const group_laterals_left = group.append('g');
       this._add_point_filler(group_laterals_left);
-      const group_laterals_right = group.append("g");
+      const group_laterals_right = group.append('g');
       this._add_point_filler(group_laterals_right);
       this.drawLaterals(group_laterals_right, group_laterals_left, section);
 
@@ -86,7 +69,7 @@ export class NgPinyesD3Component implements OnInit {
         group_vents.style('transform', 'rotate(' + this._rad_to_deg(angle_vents) + 'deg)');
         group_laterals_right.style('transform', 'rotate(' + this._rad_to_deg(angle_laterals) + 'deg)');
         group_laterals_left.style('transform', 'rotate(' + -1 * this._rad_to_deg(angle_laterals) + 'deg)');
-      })
+      }, 50)
 
 
     });
@@ -102,76 +85,97 @@ export class NgPinyesD3Component implements OnInit {
     container.style('transform-origin', 'top center');
     container.style('transform-box', 'fill-box');
     container.append('circle')
-      .attr('cx', this.rect_width/2)
+      .attr('cx', this.rect_width / 2)
       .attr('cy', 0)
-      .attr("r", 1)
+      .attr('r', 1)
       .attr('stroke', '#FFF')
       .attr('fill', '#FFF');
   }
+
   private zoom() {
-    this.g.attr("transform", d3.event.transform);
+    this.g.attr('transform', d3.event.transform);
   }
 
   private drawAgulla(container, section: SectionPinya) {
-    this.drawRectangle(container.append('rect')
-      .datum(section.agulla), 0, this.first_margin)
-
+    if( section.agulla) {
+      this.drawCasteller(container
+        .datum(section.agulla), 0, this.first_margin)
+    }
   }
 
   private drawBaix(container, section: SectionPinya) {
-    this.drawRectangle(container.append('rect')
-      .attr('fill', 'cyan')
-      .datum(section.baix), 0, this.first_margin - (this.rect_height + this. margin))
-
+    if( section.baix) {
+      this.drawCasteller(container
+        .datum(section.baix), 0, this.first_margin - (this.rect_height + this.margin));
+    }
   }
 
   private drawCrosses(container, section: SectionPinya) {
     if (section.crosses) {
-      this.drawRectangle(container.append('rect')
-        .attr('fill', 'blue')
-        .datum(section.crosses.dreta), -(this.rect_height + this.margin), this.first_margin, this.rect_width, this.rect_height);
-      this.drawRectangle(container.append('rect')
-        .attr('fill', 'blue')
-        .datum(section.crosses.esquerra), this.rect_width + this.margin, this.first_margin, this.rect_width, this.rect_height);
+      this.drawCasteller(container
+        .datum(section.crosses.dreta), -(this.rect_height + this.margin), this.first_margin, this.rect_width, this.rect_height, true);
+      this.drawCasteller(container
+        .datum(section.crosses.esquerra), this.rect_width + this.margin, this.first_margin, this.rect_width, this.rect_height, true);
     }
   }
 
   private drawMans(container, section: SectionPinya) {
     section.mans.forEach((m, i) => {
-      this.drawRectangle(container.append('rect')
-        .attr('fill', 'green')
-        .datum(m), 0, (this.rect_height + this.margin) * (i + 1)+ this.first_margin)
+      this.drawCasteller(container
+        .datum(m), 0, (this.rect_height + this.margin) * (i + 1) + this.first_margin)
     });
   }
 
   private drawVents(container, section: SectionPinya) {
     section.vents.forEach((m, i) => {
-      this.drawRectangle(container.append('rect')
-        .attr('fill', 'yellow')
-        .datum(m), 0, (this.rect_height + this.margin) * (i + 1)+ this.first_margin)
+      this.drawCasteller(container
+        .datum(m), 0, (this.rect_height + this.margin) * (i + 1) + this.first_margin)
     });
   }
 
   private drawLaterals(container_right, container_left, section: SectionPinya) {
     if (section.laterals) {
       section.laterals.dreta.forEach((m, i) => {
-        this.drawRectangle(container_right.append('rect')
-          .attr('fill', 'purple')
+        this.drawCasteller(container_right
           .datum(m), 0, (this.rect_height + this.margin) * (i + 3) + this.first_margin)
       });
       section.laterals.esquerra.forEach((m, i) => {
-        this.drawRectangle(container_left.append('rect')
-          .attr('fill', 'purple')
+        this.drawCasteller(container_left
           .datum(m), 0, (this.rect_height + this.margin) * (i + 3) + this.first_margin)
       });
     }
   }
 
-  private drawRectangle(rect, x, y, height=this.rect_height, width=this.rect_width) {
-    return rect
-      .attr("x", x)
-      .attr("y", y)
-      .attr("width", width)
-      .attr("height", height);
+  private drawCasteller(container, x, y, height = this.rect_height, width = this.rect_width, text_reversed = false) {
+    const g = container.append('g')
+
+    g.append('rect')
+      .attr('x', x)
+      .attr('y', y)
+      .attr('rx', 5)
+      .attr('ry', 5)
+      .attr('width', width)
+      .attr('height', height)
+      .style('fill', '#FFF')
+      .style('stroke', '#911305')
+      .style('stroke-width', '2')
+
+    const text = g.append('text')
+      .attr('x', x + width / 2)
+      .attr('text-anchor', 'middle')
+      .attr('y', y + height / 2)
+      .text(function (d: Casteller) {
+        return d.name;
+      });
+
+    if (text_reversed) {
+      text.style('transform-origin', 'center center');
+      text.style('transform-box', 'fill-box');
+      setTimeout( () =>{
+        text.style('transform', 'rotate(90deg)');
+      })
+    }
+
+
   }
 }
