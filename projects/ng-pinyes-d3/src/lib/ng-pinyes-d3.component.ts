@@ -29,11 +29,12 @@ export class NgPinyesD3Component implements OnInit {
   set pinya(pinya: PinyaCastells) {
     this._pinya = pinya;
 
-    if(this.g) {
+    if (this.g) {
       console.info('updated');
       this.updatePinya();
     }
   }
+
   get pinya(): PinyaCastells {
     return this._pinya;
   }
@@ -55,7 +56,7 @@ export class NgPinyesD3Component implements OnInit {
       .attr('width', this.width)
       .attr('height', this.height)
       .call(d3.zoom()
-        .scaleExtent([0, 8])
+        .scaleExtent([0.1, 8])
         .on('zoom',
           () => this.zoom()));
 
@@ -74,8 +75,9 @@ export class NgPinyesD3Component implements OnInit {
     this.pinya.sections.forEach((section, i) => {
       let group = this.g.append('g');
       this._add_point_filler(group);
-      this.drawBaix(group, section);
       this.drawAgulla(group, section);
+      this.drawBaix(group, section);
+      this.drawContrefort(group, section);
       this.drawMans(group, section);
       this.drawCrosses(group, section);
       const group_vents = group.append('g');
@@ -125,29 +127,42 @@ export class NgPinyesD3Component implements OnInit {
 
   private drawAgulla(container, section: SectionPinya) {
     if (section.agulla) {
-      this.drawCasteller(container
-        .datum(section.agulla), 0, this.first_margin)
-    }
-  }
-
-  private drawBaix(container, section: SectionPinya) {
-    if (section.baix) {
-      this.drawCasteller(container.datum(section.baix),
+      this.drawCasteller(container,
+        [section.agulla],
         0,
         this.first_margin - (this.rect_height + this.margin));
     }
   }
 
+  private drawBaix(container, section: SectionPinya) {
+    if (section.baix) {
+      this.drawCasteller(container,
+        [section.baix],
+        0,
+        this.first_margin);
+    }
+  }
+
+  private drawContrefort(container, section: SectionPinya) {
+    if (section.contrafort) {
+      this.drawCasteller(container,
+        [section.contrafort],
+        0,
+        (d, i) => (this.rect_height + this.margin) * (i + 1) + this.first_margin);
+    }
+  }
+
   private drawCrosses(container, section: SectionPinya) {
     if (section.crosses) {
-      this.drawCasteller(container.datum(section.crosses.dreta),
+      this.drawCasteller(container,
+        [section.crosses.dreta],
         -(this.rect_height + this.margin),
         this.first_margin,
         this.rect_width,
         this.rect_height,
         true);
-      this.drawCasteller(container
-        .datum(section.crosses.esquerra),
+      this.drawCasteller(container,
+        [section.crosses.esquerra],
         this.rect_width + this.margin,
         this.first_margin,
         this.rect_width,
@@ -157,36 +172,50 @@ export class NgPinyesD3Component implements OnInit {
   }
 
   private drawMans(container, section: SectionPinya) {
-    section.mans.forEach((m, i) => {
-      this.drawCasteller(container
-        .datum(m), 0, (this.rect_height + this.margin) * (i + 1) + this.first_margin)
-    });
+
+    this.drawCasteller(container,
+      section.mans,
+      0,
+      (d, i) => (this.rect_height + this.margin) * (i + 2) + this.first_margin)
   }
 
   private drawVents(container, section: SectionPinya) {
-    section.vents.forEach((m, i) => {
-      this.drawCasteller(container
-        .datum(m), 0, (this.rect_height + this.margin) * (i + 1) + this.first_margin)
-    });
+
+
+    this.drawCasteller(container,
+      section.vents,
+      0,
+      (d, i) => (this.rect_height + this.margin) * (i + 1) + this.first_margin);
   }
 
   private drawLaterals(container_right, container_left, section: SectionPinya) {
     if (section.laterals) {
-      section.laterals.dreta.forEach((m, i) => {
-        this.drawCasteller(container_right
-          .datum(m), 0, (this.rect_height + this.margin) * (i + 3) + this.first_margin)
-      });
-      section.laterals.esquerra.forEach((m, i) => {
-        this.drawCasteller(container_left
-          .datum(m), 0, (this.rect_height + this.margin) * (i + 3) + this.first_margin)
-      });
+      this.drawCasteller(container_right,
+        section.laterals.dreta,
+        0,
+        (d, i) => (this.rect_height + this.margin) * (i + 3) + this.first_margin
+      );
+
+      this.drawCasteller(container_left,
+        section.laterals.esquerra,
+        0,
+        (d, i) => (this.rect_height + this.margin) * (i + 3) + this.first_margin
+      );
     }
   }
 
-  private drawCasteller(container, x, y, height = this.rect_height, width = this.rect_width, textReversed = false) {
-    const g = container.append('g');
+  private drawCasteller(container,
+                        data: Casteller[],
+                        x, y,
+                        height: number | ((Casteller, number) => number) = this.rect_height,
+                        width: number | ((Casteller, number) => number) = this.rect_width,
+                        textReversed = false) {
 
-    g.append('rect')
+    const groups = container.append('g').selectAll('g')
+      .data(data)
+      .enter()
+      .append('g');
+    groups.append('rect')
       .attr('x', x)
       .attr('y', y)
       .attr('rx', 5)
@@ -198,22 +227,22 @@ export class NgPinyesD3Component implements OnInit {
       .style('stroke', this.strokeColor)
       .style('stroke-width', this.strokeWidth);
 
-    const text = g.append('text')
-      .attr('x', x + width / 2)
-      .attr('text-anchor', 'middle')
-      .attr('y', y + height / 2)
-      .text(function (d: Casteller) {
-        return d.name + '\r\n' + d.id;
-      });
 
-    if (textReversed) {
-      text.style('transform-origin', 'center center');
-      text.style('transform-box', 'fill-box');
-      setTimeout(() => {
-        text.style('transform', 'rotate(90deg)');
+    groups.append('text')
+      .attr('x', (d, i) => {
+        return (typeof x == 'function' ? x(d, i) : x) +
+          (typeof width == 'function' ? width(d, i) : width) / 2;
       })
-    }
-
-
+      .attr('y', (d, i) => {
+        return (typeof y == 'function' ? y(d, i) : y) +
+          (typeof height == 'function' ? height(d, i) : height) / 2;
+      })
+      .attr('text-anchor', 'middle')
+      .text((d: Casteller) => d.name + ' ' + d.id)
+      .style('transform-origin', !textReversed ? '' : 'center center')
+      .style('transform-box', !textReversed ? '' : 'fill-box');
+    setTimeout(() => {
+      groups.selectAll('text').style('transform', !textReversed ? '' : 'rotate(90deg)');
+    });
   }
 }
