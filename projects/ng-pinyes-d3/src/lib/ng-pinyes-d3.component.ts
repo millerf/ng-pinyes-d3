@@ -1,12 +1,10 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import * as d3 from 'd3';
-import {Casteller, PinyaCastells} from './pinya.model';
+import {AttendanceType, AttendanceTypeUnanswered, CastellerLloc, PinyaCastells} from './pinya.model';
 
 @Component({
   selector: 'ng-pinyes-d3',
   template: `
-    <button (click)="zoomOn()"> zoom {{idRandom}}</button>
-    <br/>
     <svg></svg>
   `,
 })
@@ -19,7 +17,14 @@ export class NgPinyesD3Component implements OnInit {
   @Input() strokeColor = '911305';
   @Input() strokeWidth = 2;
   @Input() borderCurve = 5;
-  idRandom;
+
+  @Input()
+  set showId(showId) {
+    this.zoomOn(showId)
+  }
+
+  @Output() clickOnCastellerLloc = new EventEmitter<CastellerLloc>();
+
   firsDraw = true;
   rect_width = 100;
   rect_height = 50;
@@ -39,11 +44,14 @@ export class NgPinyesD3Component implements OnInit {
   get pinya(): PinyaCastells {
     return this._pinya;
   }
-  
+
   private _editMode = false;
   @Input()
   set editMode(editMode: boolean) {
     this._editMode = editMode;
+    if (this.g) {
+      this.updatePinya();
+    }
   };
 
   get editMode() {
@@ -71,8 +79,6 @@ export class NgPinyesD3Component implements OnInit {
     this.g = this.svg.append('g');
 
     this.first_margin = this.rect_height * (this.pinya.sections.length - 1);
-
-    this.idRandom = this.pinya.sections[1].mans[2].id;
 
     this.updatePinya();
   }
@@ -123,10 +129,15 @@ export class NgPinyesD3Component implements OnInit {
     }
   }
 
-  public zoomOn() {
-    const element = d3.select('#casteller_' + this.idRandom);
-    element.style('fill', 'green');
-   // (element.node() as HTMLElement).dispatchEvent(new ButtonEvent("click"));
+  public zoomOn(id = null) {
+    if (id === null) {
+      d3.select('.casteller')
+        .style('fill', 'none');
+    } else {
+      const element = d3.select('#casteller_' + id);
+      element.style('fill', 'green');
+      // (element.node() as HTMLElement).dispatchEvent(new ButtonEvent("click"));
+    }
   }
 
   private _rad_to_deg(ang_rad: number): number {
@@ -251,7 +262,7 @@ export class NgPinyesD3Component implements OnInit {
 
   private drawCasteller(unique_selector,
                         container,
-                        data: Casteller[],
+                        data: CastellerLloc[],
                         x: number | ((Casteller, number) => number),
                         y: number | ((Casteller, number) => number),
                         canAddNewPosition = false,
@@ -279,11 +290,12 @@ export class NgPinyesD3Component implements OnInit {
         .attr('width', this.rect_width)
         .attr('height', this.rect_height)
         .style('fill', this.fillColor)
+        .style('cursor', 'pointer')
         .style('stroke', this.strokeColor)
         .style('stroke-width', this.strokeWidth)
         .style('stroke-dasharray', 5)
         .on('click', () => {
-          data.push(new Casteller());
+          data.push(new CastellerLloc());
           this.updatePinya();
         });
     }
@@ -295,7 +307,10 @@ export class NgPinyesD3Component implements OnInit {
     rectangles.exit().remove();
 
     // Update exiting
-    rectangles.attr('id', (d: Casteller) => d ? 'casteller_' + d.id : null);
+    rectangles
+      .attr('id', (d: CastellerLloc) => d && d.casteller ? 'casteller_' + d.casteller.id : null)
+      .style('cursor', () => this.editMode ? 'pointer' : 'default')
+      .style('stroke', (d) => this.getColor(d, true) || this.strokeColor);
 
     // Create new
     rectangles.enter()
@@ -306,10 +321,17 @@ export class NgPinyesD3Component implements OnInit {
       .attr('ry', this.borderCurve)
       .attr('width', width)
       .attr('height', height)
-      .attr('id', (d: Casteller) => d ? 'casteller_' + d.id : null)
+      .attr('class', 'casteller')
+      .attr('id', (d: CastellerLloc) => d && d.casteller ? 'casteller_' + d.casteller.id : null)
       .style('fill', this.fillColor)
-      .style('stroke', this.strokeColor)
-      .style('stroke-width', this.strokeWidth);
+      .style('cursor', () => this.editMode ? 'pointer' : 'default')
+      .style('stroke', (d) => this.getColor(d, true) || this.strokeColor)
+      .style('stroke-width', this.strokeWidth)
+      .on('click', (d) => {
+        if (this.editMode) {
+          this.clickOnCastellerLloc.emit(d);
+        }
+      });
 
     const texts = groups.selectAll('text')
       .data(data);
@@ -318,15 +340,16 @@ export class NgPinyesD3Component implements OnInit {
     texts.exit().remove();
 
     // Update exiting
-    texts.text((d: Casteller) => {
-      return d.name + ' ' + d.id;
-    });
+    texts
+      .style('fill', (d) => this.getColor(d))
+      .text((d: CastellerLloc) => {
+        return d.casteller ? d.casteller.name + ' ' + d.casteller.id : null;
+      });
 
     // Create new
     texts
       .enter()
       .append('text')
-      .style('user-select', 'none')
       .attr('x', (d, i) => {
         return (typeof x == 'function' ? x(d, i) : x) +
           (typeof width == 'function' ? width(d, i) : width) / 2;
@@ -336,8 +359,10 @@ export class NgPinyesD3Component implements OnInit {
           (typeof height == 'function' ? height(d, i) : height) / 2;
       })
       .attr('text-anchor', 'middle')
-      .text((d: Casteller) => {
-        return d.name + ' ' + d.id;
+      .style('fill', (d) => this.getColor(d))
+      .style('user-select', 'none')
+      .text((d: CastellerLloc) => {
+        return d.casteller ? d.casteller.name + ' ' + d.casteller.id : null;
       })
       .style('transform-origin', !textReversed ? '' : 'center center')
       .style('transform-box', !textReversed ? '' : 'fill-box');
@@ -346,4 +371,12 @@ export class NgPinyesD3Component implements OnInit {
       groups.selectAll('text').style('transform', !textReversed ? '' : 'rotate(90deg)');
     });
   }
+
+  private getColor(d: CastellerLloc, showUnanswered = false): string {
+    return d && d.casteller ?
+      (d.attendance === AttendanceType.cannotAttend ? 'red' :
+        (d.attendance === AttendanceType.maybe ? 'orange' :
+          (d.attendance === AttendanceTypeUnanswered ? (showUnanswered ? 'yellow' : '') : ''))) : '';
+  }
+
 }

@@ -1,5 +1,9 @@
 <!--The content below is only a placeholder and can be replaced.-->
 <div style="text-align:center">
-<ng-pinyes-d3 [pinya]="pinya"></ng-pinyes-d3>
+  <button (click)="editMode = !editMode">editMode</button>
+<ng-pinyes-d3 [pinya]="pinya"
+              [editMode]="editMode"
+              (clickOnCastellerLloc)="clickOnCastellerLloc($event)"
+></ng-pinyes-d3>
 </div>
 <router-outlet></router-outlet>

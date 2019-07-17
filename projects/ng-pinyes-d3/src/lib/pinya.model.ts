@@ -1,30 +1,43 @@
 export class PinyaCastells {
 
   sections: SectionPinya[];
-  agulla: Casteller
+  agulla: CastellerLloc
 
 }
 
 
 export class SectionPinya {
-  contrafort: Casteller;
-  baix: Casteller;
-  agulla: Casteller;
+  contrafort: CastellerLloc;
+  baix: CastellerLloc;
+  agulla: CastellerLloc;
   crosses: {
-    dreta: Casteller,
-    esquerra: Casteller
+    dreta: CastellerLloc,
+    esquerra: CastellerLloc
   };
   laterals: {
-    dreta: Casteller[],
-    esquerra: Casteller[]
+    dreta: CastellerLloc[],
+    esquerra: CastellerLloc[]
   };
-  vents: Casteller[];
-  mans: Casteller[];
+  vents: CastellerLloc[];
+  mans: CastellerLloc[];
 
 }
 
+
+export class CastellerLloc {
+  casteller: Casteller =  null;
+  attendance: AttendanceType | typeof AttendanceTypeUnanswered = AttendanceTypeUnanswered;
+}
 
 export class Casteller {
   id = Math.floor(Math.random() * 10000) + 1;
   name = 'nombre';
 }
+
+
+export enum AttendanceType {
+  attend = 'attend',
+  cannotAttend = 'cannotAttend',
+  maybe = 'maybe'
+}
+export const AttendanceTypeUnanswered = 'unanswered';
