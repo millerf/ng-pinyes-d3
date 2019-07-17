@@ -1,7 +1,6 @@
 import {Component, Input, OnInit} from '@angular/core';
 import * as d3 from 'd3';
-import {Casteller, PinyaCastells, SectionPinya} from './pinya.model';
-import {resolveTxt} from 'dns';
+import {Casteller, PinyaCastells} from './pinya.model';
 
 @Component({
   selector: 'ng-pinyes-d3',
@@ -33,7 +32,6 @@ export class NgPinyesD3Component implements OnInit {
     this._pinya = pinya;
 
     if (this.g) {
-      console.info('updated');
       this.updatePinya();
     }
   }
@@ -41,13 +39,21 @@ export class NgPinyesD3Component implements OnInit {
   get pinya(): PinyaCastells {
     return this._pinya;
   }
+  
+  private _editMode = false;
+  @Input()
+  set editMode(editMode: boolean) {
+    this._editMode = editMode;
+  };
+
+  get editMode() {
+    return this._editMode;
+  }
 
   ngOnInit() {
 
     // Setting two constant attributes.
     this.svg = d3.select('svg');
-
-    this.g = this.svg.append('g');
 
     this.svg
       .attr('width', this.width)
@@ -62,9 +68,9 @@ export class NgPinyesD3Component implements OnInit {
         .scaleExtent([0.1, 8])
         .on('zoom',
           () => this.zoom()));
+    this.g = this.svg.append('g');
 
-
-    this.first_margin = this.rect_height * (this.pinya.sections.length - 1)
+    this.first_margin = this.rect_height * (this.pinya.sections.length - 1);
 
     this.idRandom = this.pinya.sections[1].mans[2].id;
 
@@ -74,19 +80,19 @@ export class NgPinyesD3Component implements OnInit {
   private updatePinya() {
     if (this.firsDraw) {
       this.pinya.sections.forEach((section, i) => {
-        let group = this.g.append('g').attr('id', 'main'+i);
+        let group = this.g.append('g').attr('id', 'main' + i);
         this._add_point_filler(group);
         this.drawAgulla(group, i);
         this.drawBaix(group, i);
         this.drawContrefort(group, i);
         this.drawMans(group, i);
         this.drawCrosses(group, i);
-        const group_vents = group.append('g').attr('id','vents'+i);
+        const group_vents = group.append('g').attr('id', 'vents' + i);
         this._add_point_filler(group_vents);
         this.drawVents(group_vents, i);
-        const group_laterals_left = group.append('g').attr('id', 'lateralsleft'+i);
+        const group_laterals_left = group.append('g').attr('id', 'lateralsleft' + i);
         this._add_point_filler(group_laterals_left);
-        const group_laterals_right = group.append('g').attr('id', 'lateralsright'+i);
+        const group_laterals_right = group.append('g').attr('id', 'lateralsright' + i);
         this._add_point_filler(group_laterals_right);
         this.drawLaterals(group_laterals_right, group_laterals_left, i);
         this.firsDraw = false;
@@ -102,10 +108,10 @@ export class NgPinyesD3Component implements OnInit {
       });
     } else {
       this.pinya.sections.forEach((section, i) => {
-        let group = this.g.select('g#main'+i);
-        let group_vents = this.g.select('g#vents'+i);
-        let group_laterals_right = this.g.select('g#lateralsright'+i);
-        let group_laterals_left = this.g.select('g#lateralsleft'+i);
+        let group = this.g.select('g#main' + i);
+        let group_vents = this.g.select('g#vents' + i);
+        let group_laterals_right = this.g.select('g#lateralsright' + i);
+        let group_laterals_left = this.g.select('g#lateralsleft' + i);
         this.drawAgulla(group, i);
         this.drawBaix(group, i);
         this.drawContrefort(group, i);
@@ -119,7 +125,8 @@ export class NgPinyesD3Component implements OnInit {
 
   public zoomOn() {
     const element = d3.select('#casteller_' + this.idRandom);
-    element.style('fill', 'green')
+    element.style('fill', 'green');
+   // (element.node() as HTMLElement).dispatchEvent(new ButtonEvent("click"));
   }
 
   private _rad_to_deg(ang_rad: number): number {
@@ -182,6 +189,7 @@ export class NgPinyesD3Component implements OnInit {
         [section.crosses.dreta],
         -(this.rect_height + this.margin),
         this.first_margin,
+        false,
         this.rect_width,
         this.rect_height,
         true);
@@ -190,6 +198,7 @@ export class NgPinyesD3Component implements OnInit {
         [section.crosses.esquerra],
         this.rect_width + this.margin,
         this.first_margin,
+        false,
         this.rect_width,
         this.rect_height,
         true);
@@ -203,7 +212,8 @@ export class NgPinyesD3Component implements OnInit {
       container,
       section.mans,
       0,
-      (d, i) => (this.rect_height + this.margin) * (i + 2) + this.first_margin)
+      (d, i) => (this.rect_height + this.margin) * (i + 2) + this.first_margin,
+      true);
   }
 
   private drawVents(container, index: number) {
@@ -214,7 +224,8 @@ export class NgPinyesD3Component implements OnInit {
       container,
       section.vents,
       0,
-      (d, i) => (this.rect_height + this.margin) * (i + 1) + this.first_margin);
+      (d, i) => (this.rect_height + this.margin) * (i + 1) + this.first_margin,
+      true);
   }
 
   private drawLaterals(container_right, container_left, index: number) {
@@ -224,14 +235,16 @@ export class NgPinyesD3Component implements OnInit {
         container_right,
         section.laterals.dreta,
         0,
-        (d, i) => (this.rect_height + this.margin) * (i + 3) + this.first_margin
+        (d, i) => (this.rect_height + this.margin) * (i + 3) + this.first_margin,
+        true
       );
 
       this.drawCasteller('lateralsesquerra' + index,
         container_left,
         section.laterals.esquerra,
         0,
-        (d, i) => (this.rect_height + this.margin) * (i + 3) + this.first_margin
+        (d, i) => (this.rect_height + this.margin) * (i + 3) + this.first_margin,
+        true
       );
     }
   }
@@ -241,24 +254,48 @@ export class NgPinyesD3Component implements OnInit {
                         data: Casteller[],
                         x: number | ((Casteller, number) => number),
                         y: number | ((Casteller, number) => number),
+                        canAddNewPosition = false,
                         height: number | ((Casteller, number) => number) = this.rect_height,
                         width: number | ((Casteller, number) => number) = this.rect_width,
                         textReversed = false) {
 
     let groups = container.select('g#' + unique_selector);
-    console.info(groups.empty())
     if (groups.empty()) {
       groups = container.append('g').attr('id', unique_selector);
+    } else {
+      container.select('.add-new-lloc.' + unique_selector).remove();
+    }
+
+    // Button to add new Castellers
+    if (this.editMode && canAddNewPosition) {
+      // This button is at the end of lists. X is always 0
+
+      container.append('rect')
+        .attr('class', 'add-new-lloc ' + unique_selector)
+        .attr('x', x)
+        .attr('y', () => (typeof y == 'function' ? y(null, data.length) : 0))
+        .attr('rx', this.borderCurve)
+        .attr('ry', this.borderCurve)
+        .attr('width', this.rect_width)
+        .attr('height', this.rect_height)
+        .style('fill', this.fillColor)
+        .style('stroke', this.strokeColor)
+        .style('stroke-width', this.strokeWidth)
+        .style('stroke-dasharray', 5)
+        .on('click', () => {
+          data.push(new Casteller());
+          this.updatePinya();
+        });
     }
 
     const rectangles = groups.selectAll('rect')
-      .data(data)
+      .data(data);
 
     //Remove old
-    rectangles.exit().remove()
+    rectangles.exit().remove();
 
     // Update exiting
-    rectangles.attr('id', (d: Casteller) => d ? 'casteller_' + d.id : null)
+    rectangles.attr('id', (d: Casteller) => d ? 'casteller_' + d.id : null);
 
     // Create new
     rectangles.enter()
@@ -274,7 +311,6 @@ export class NgPinyesD3Component implements OnInit {
       .style('stroke', this.strokeColor)
       .style('stroke-width', this.strokeWidth);
 
-
     const texts = groups.selectAll('text')
       .data(data);
 
@@ -282,12 +318,15 @@ export class NgPinyesD3Component implements OnInit {
     texts.exit().remove();
 
     // Update exiting
-    texts.text((d: Casteller) => {console.info(d);return d.name + ' ' + d.id;})
+    texts.text((d: Casteller) => {
+      return d.name + ' ' + d.id;
+    });
 
     // Create new
     texts
       .enter()
       .append('text')
+      .style('user-select', 'none')
       .attr('x', (d, i) => {
         return (typeof x == 'function' ? x(d, i) : x) +
           (typeof width == 'function' ? width(d, i) : width) / 2;
@@ -297,9 +336,12 @@ export class NgPinyesD3Component implements OnInit {
           (typeof height == 'function' ? height(d, i) : height) / 2;
       })
       .attr('text-anchor', 'middle')
-      .text((d: Casteller) => {console.info(d);return d.name + ' ' + d.id;})
+      .text((d: Casteller) => {
+        return d.name + ' ' + d.id;
+      })
       .style('transform-origin', !textReversed ? '' : 'center center')
       .style('transform-box', !textReversed ? '' : 'fill-box');
+
     setTimeout(() => {
       groups.selectAll('text').style('transform', !textReversed ? '' : 'rotate(90deg)');
     });
