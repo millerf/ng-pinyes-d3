@@ -2,11 +2,21 @@ import {Component} from '@angular/core';
 import {
   AttendanceType,
   AttendanceTypeUnanswered,
-  Casteller,
+  CastellerInterface,
   CastellerLloc,
-  PinyaCastells,
+  PinyaCastell,
   SectionPinya
 } from '../../projects/ng-pinyes-d3/src/lib/pinya.model';
+import {PinyaFactory} from '../../projects/ng-pinyes-d3/src/lib/ng-pinyes-factory.class';
+
+class Casteller implements CastellerInterface {
+  pk = Math.floor(Math.random() * 10000) + 1;
+  name = '';
+
+  getName() {
+    return this.name;
+  }
+}
 
 @Component({
   selector: 'app-root',
@@ -14,51 +24,22 @@ import {
   styleUrls: ['./app.component.less']
 })
 export class AppComponent {
-  pinya: PinyaCastells;
+  pinya: PinyaCastell;
   editMode = false;
 
   constructor() {
 
-    this.pinya = new PinyaCastells();
+    this.pinya = PinyaFactory.generate(3, 4, 4, 4);
 
-
-    const sp = new SectionPinya();
-    sp.agulla = new CastellerLloc();
-    sp.baix = new CastellerLloc();
-    sp.contrafort = new CastellerLloc();
-    sp.crosses = {dreta: new CastellerLloc(), esquerra: new CastellerLloc()};
-    sp.vents = [new CastellerLloc(), new CastellerLloc(), new CastellerLloc(), new CastellerLloc()];
-    sp.mans = [new CastellerLloc(), new CastellerLloc(), new CastellerLloc(), new CastellerLloc()];
-    sp.laterals = {
-      dreta: [new CastellerLloc(), new CastellerLloc(), new CastellerLloc()],
-      esquerra: [new CastellerLloc(), new CastellerLloc(), new CastellerLloc()]
-    };
-
-    const sp2 = new SectionPinya();
-    sp2.agulla = new CastellerLloc();
-    sp2.baix = new CastellerLloc();
-    sp2.contrafort = new CastellerLloc();
-    sp2.crosses = {dreta: new CastellerLloc(), esquerra: new CastellerLloc()};
-    sp2.vents = [new CastellerLloc(), new CastellerLloc(), new CastellerLloc(), new CastellerLloc()];
-    sp2.mans = [new CastellerLloc(), new CastellerLloc(), new CastellerLloc(), new CastellerLloc()];
-    sp2.laterals = {
-      dreta: [new CastellerLloc(), new CastellerLloc(), new CastellerLloc()],
-      esquerra: [new CastellerLloc(), new CastellerLloc(), new CastellerLloc()]
-    };
-
-    const attendances : any = [AttendanceTypeUnanswered, AttendanceType.maybe, AttendanceType.cannotAttend, AttendanceType.attend];
-    sp.mans.forEach((d) => d.casteller = new Casteller());
-    sp.mans.forEach((d) => d.attendance = attendances[Math.floor(Math.random() * 4)]);
-    this.pinya.sections = [sp, sp2, {...sp2}];
 
     setTimeout(() => {
-      sp.vents = sp.vents.slice(2, 4);
-      this.pinya = {...this.pinya};
+      this.pinya.sections[1].vents = this.pinya.sections[1].vents.slice(2, 4);
+      this.pinya = new PinyaCastell().assign(this.pinya);
     }, 4000)
   }
 
   clickOnCastellerLloc(lloc: CastellerLloc) {
     lloc.casteller = new Casteller();
-    this.pinya = {...this.pinya};
+    this.pinya = new PinyaCastell().assign(this.pinya);
   }
 }

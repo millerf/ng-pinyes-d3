@@ -1,6 +1,6 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
-import * as d3 from 'd3';
-import {AttendanceType, AttendanceTypeUnanswered, CastellerLloc, PinyaCastells} from './pinya.model';
+import * as d3 from "d3";
+import {AttendanceType, AttendanceTypeUnanswered, CastellerLloc, PinyaCastell} from './pinya.model';
 
 @Component({
   selector: 'ng-pinyes-d3',
@@ -31,9 +31,9 @@ export class NgPinyesD3Component implements OnInit {
   margin = 5;
   first_margin;
 
-  private _pinya: PinyaCastells;
+  private _pinya: PinyaCastell;
   @Input()
-  set pinya(pinya: PinyaCastells) {
+  set pinya(pinya: PinyaCastell) {
     this._pinya = pinya;
 
     if (this.g) {
@@ -41,7 +41,7 @@ export class NgPinyesD3Component implements OnInit {
     }
   }
 
-  get pinya(): PinyaCastells {
+  get pinya(): PinyaCastell {
     return this._pinya;
   }
 
@@ -308,7 +308,7 @@ export class NgPinyesD3Component implements OnInit {
 
     // Update exiting
     rectangles
-      .attr('id', (d: CastellerLloc) => d && d.casteller ? 'casteller_' + d.casteller.id : null)
+      .attr('id', (d: CastellerLloc) => d && d.casteller ? 'casteller_' + d.casteller.pk : null)
       .style('cursor', () => this.editMode ? 'pointer' : 'default')
       .style('stroke', (d) => this.getColor(d, true) || this.strokeColor);
 
@@ -322,7 +322,7 @@ export class NgPinyesD3Component implements OnInit {
       .attr('width', width)
       .attr('height', height)
       .attr('class', 'casteller')
-      .attr('id', (d: CastellerLloc) => d && d.casteller ? 'casteller_' + d.casteller.id : null)
+      .attr('id', (d: CastellerLloc) => d && d.casteller ? 'casteller_' + d.casteller.pk : null)
       .style('fill', this.fillColor)
       .style('cursor', () => this.editMode ? 'pointer' : 'default')
       .style('stroke', (d) => this.getColor(d, true) || this.strokeColor)
@@ -343,7 +343,7 @@ export class NgPinyesD3Component implements OnInit {
     texts
       .style('fill', (d) => this.getColor(d))
       .text((d: CastellerLloc) => {
-        return d.casteller ? d.casteller.name + ' ' + d.casteller.id : null;
+        return d.casteller ? d.casteller.getName() : null;
       });
 
     // Create new
@@ -362,7 +362,7 @@ export class NgPinyesD3Component implements OnInit {
       .style('fill', (d) => this.getColor(d))
       .style('user-select', 'none')
       .text((d: CastellerLloc) => {
-        return d.casteller ? d.casteller.name + ' ' + d.casteller.id : null;
+        return d.casteller ? d.casteller.getName() : null;
       })
       .style('transform-origin', !textReversed ? '' : 'center center')
       .style('transform-box', !textReversed ? '' : 'fill-box');

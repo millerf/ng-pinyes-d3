@@ -1,9 +1,11 @@
 {
   "name": "ng-pinyes-d3",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "peerDependencies": {
-    "@angular/common": "^8.1.1",
-    "@angular/core": "^8.1.1",
+    "@angular/common": "^6.0.0 || ^7.0.0 || ^8.0.0",
+    "@angular/core": "^6.0.0 || ^7.0.0 || ^8.0.0"
+  },
+  "devDependencies": {
     "d3": "^5.9.7",
     "@types/d3": "^5.7.2"
   }
