@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import * as d3 from "d3";
 import {AttendanceType, AttendanceTypeUnanswered, CastellerLloc, PinyaCastell} from './pinya.model';
 
@@ -7,6 +7,7 @@ import {AttendanceType, AttendanceTypeUnanswered, CastellerLloc, PinyaCastell} f
   template: `
     <svg></svg>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NgPinyesD3Component implements OnInit {
   g;
@@ -166,7 +167,9 @@ export class NgPinyesD3Component implements OnInit {
         container,
         [section.agulla],
         0,
-        this.first_margin - (this.rect_height + this.margin));
+        this.first_margin - (this.rect_height + this.margin),
+        this.isTextReversed(index),
+      );
     }
   }
 
@@ -177,7 +180,9 @@ export class NgPinyesD3Component implements OnInit {
         container,
         [section.baix],
         0,
-        this.first_margin);
+        this.first_margin,
+        this.isTextReversed(index),
+      );
     }
   }
 
@@ -188,7 +193,9 @@ export class NgPinyesD3Component implements OnInit {
         container,
         [section.contrafort],
         0,
-        (d, i) => (this.rect_height + this.margin) * (i + 1) + this.first_margin);
+        (d, i) => (this.rect_height + this.margin) * (i + 1) + this.first_margin,
+        this.isTextReversed(index)
+      );
     }
   }
 
@@ -201,6 +208,7 @@ export class NgPinyesD3Component implements OnInit {
         -(this.rect_height + this.margin),
         this.first_margin,
         false,
+        false,
         this.rect_width,
         this.rect_height,
         true);
@@ -209,6 +217,7 @@ export class NgPinyesD3Component implements OnInit {
         [section.crosses.esquerra],
         this.rect_width + this.margin,
         this.first_margin,
+        false,
         false,
         this.rect_width,
         this.rect_height,
@@ -224,6 +233,7 @@ export class NgPinyesD3Component implements OnInit {
       section.mans,
       0,
       (d, i) => (this.rect_height + this.margin) * (i + 2) + this.first_margin,
+      this.isTextReversed(index),
       true);
   }
 
@@ -236,6 +246,7 @@ export class NgPinyesD3Component implements OnInit {
       section.vents,
       0,
       (d, i) => (this.rect_height + this.margin) * (i + 1) + this.first_margin,
+      this.isTextReversed(index),
       true);
   }
 
@@ -247,6 +258,7 @@ export class NgPinyesD3Component implements OnInit {
         section.laterals.dreta,
         0,
         (d, i) => (this.rect_height + this.margin) * (i + 3) + this.first_margin,
+        this.isTextReversed(index),
         true
       );
 
@@ -255,6 +267,7 @@ export class NgPinyesD3Component implements OnInit {
         section.laterals.esquerra,
         0,
         (d, i) => (this.rect_height + this.margin) * (i + 3) + this.first_margin,
+        this.isTextReversed(index),
         true
       );
     }
@@ -265,10 +278,11 @@ export class NgPinyesD3Component implements OnInit {
                         data: CastellerLloc[],
                         x: number | ((Casteller, number) => number),
                         y: number | ((Casteller, number) => number),
+                        textReversed = false,
                         canAddNewPosition = false,
                         height: number | ((Casteller, number) => number) = this.rect_height,
                         width: number | ((Casteller, number) => number) = this.rect_width,
-                        textReversed = false) {
+                        textVertical = false) {
 
     let groups = container.select('g#' + unique_selector);
     if (groups.empty()) {
@@ -300,7 +314,7 @@ export class NgPinyesD3Component implements OnInit {
         });
     }
 
-    const rectangles = groups.selectAll('rect')
+    const rectangles = groups.selectAll('rect.casteller')
       .data(data);
 
     //Remove old
@@ -309,7 +323,6 @@ export class NgPinyesD3Component implements OnInit {
     // Update exiting
     rectangles
       .attr('id', (d: CastellerLloc) => d && d.casteller ? 'casteller_' + d.casteller.pk : null)
-      .style('cursor', () => this.editMode ? 'pointer' : 'default')
       .style('stroke', (d) => this.getColor(d, true) || this.strokeColor);
 
     // Create new
@@ -324,14 +337,8 @@ export class NgPinyesD3Component implements OnInit {
       .attr('class', 'casteller')
       .attr('id', (d: CastellerLloc) => d && d.casteller ? 'casteller_' + d.casteller.pk : null)
       .style('fill', this.fillColor)
-      .style('cursor', () => this.editMode ? 'pointer' : 'default')
       .style('stroke', (d) => this.getColor(d, true) || this.strokeColor)
-      .style('stroke-width', this.strokeWidth)
-      .on('click', (d) => {
-        if (this.editMode) {
-          this.clickOnCastellerLloc.emit(d);
-        }
-      });
+      .style('stroke-width', this.strokeWidth);
 
     const texts = groups.selectAll('text')
       .data(data);
@@ -345,6 +352,7 @@ export class NgPinyesD3Component implements OnInit {
       .text((d: CastellerLloc) => {
         return d.casteller ? d.casteller.getName() : null;
       });
+
 
     // Create new
     texts
@@ -364,12 +372,43 @@ export class NgPinyesD3Component implements OnInit {
       .text((d: CastellerLloc) => {
         return d.casteller ? d.casteller.getName() : null;
       })
-      .style('transform-origin', !textReversed ? '' : 'center center')
-      .style('transform-box', !textReversed ? '' : 'fill-box');
+      .attr('transform', (d, i) => {
+        const _x = (typeof x == 'function' ? x(d, i) : x) +
+          (typeof width == 'function' ? width(d, i) : width) / 2;
 
-    setTimeout(() => {
-      groups.selectAll('text').style('transform', !textReversed ? '' : 'rotate(90deg)');
-    });
+        const _y = (typeof y == 'function' ? y(d, i) : y) +
+          (typeof height == 'function' ? height(d, i) : height) / 2;
+        return !textVertical ? (
+          textReversed ? 'rotate(180, ' + _x + ', ' + _y + ')' : '') :
+          'rotate(90, ' + _x + ', ' + _y + ')';
+      });
+
+
+    const rectangles_click = groups.selectAll('rect.casteller_click')
+      .data(this.editMode ? data : []);
+
+    //Remove old
+    rectangles_click.exit().remove();
+
+    // Create new
+    rectangles_click.enter()
+      .append('rect')
+      .attr('x', x)
+      .attr('y', y)
+      .attr('class', 'casteller_click')
+      .attr('rx', this.borderCurve)
+      .attr('ry', this.borderCurve)
+      .attr('width', width)
+      .attr('height', height)
+      .attr('fill', 'transparent')
+      .attr('stroke', 'transparent')
+      .style('cursor', () => 'pointer')
+      .on('click', (d) => {
+        if (this.editMode) {
+          this.clickOnCastellerLloc.emit(d);
+        }
+      });
+
   }
 
   private getColor(d: CastellerLloc, showUnanswered = false): string {
@@ -379,4 +418,8 @@ export class NgPinyesD3Component implements OnInit {
           (d.attendance === AttendanceTypeUnanswered ? (showUnanswered ? 'yellow' : '') : ''))) : '';
   }
 
+
+  private isTextReversed(index) {
+    return index > this.pinya.sections.length / 2 - 1;
+  }
 }

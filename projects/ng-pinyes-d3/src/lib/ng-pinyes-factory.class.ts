@@ -16,7 +16,7 @@ export class PinyaFactory {
 
     for (let i  = 0; i < number; i ++ ){
       const sp = new SectionPinya();
-      sp.agulla = new CastellerLloc();
+      sp.agulla = number === 2 && i ==1 ? null : new CastellerLloc(); // Only one agulla in torres
       sp.baix = new CastellerLloc();
       sp.contrafort = new CastellerLloc();
       sp.crosses = {dreta: new CastellerLloc(), esquerra: new CastellerLloc()};

@@ -53,6 +53,7 @@ export class AssignedObject extends AssignedObjectWithoutPk {
 
 export class PinyaCastell extends AssignedObject {
   sections: SectionPinya[] = [];
+  name: string = null;
 
   protected afterAssign() {
     super.afterAssign();
@@ -63,7 +64,6 @@ export class PinyaCastell extends AssignedObject {
 
 
 export class SectionPinya extends AssignedObjectWithoutPk {
-
   contrafort: CastellerLloc = null;
   baix: CastellerLloc  = null;
   agulla: CastellerLloc  = null;
@@ -86,15 +86,15 @@ export class SectionPinya extends AssignedObjectWithoutPk {
   protected afterAssign() {
     super.afterAssign();
 
-    this.agulla = new CastellerLloc().assign(this.agulla);
-    this.contrafort = new CastellerLloc().assign(this.contrafort);
-    this.baix = new CastellerLloc().assign(this.baix);
-    this.vents = this.vents.map(s => new CastellerLloc().assign(s));
-    this.mans = this.mans.map(s => new CastellerLloc().assign(s));
-    this.laterals.esquerra = this.laterals.esquerra.map(s => new CastellerLloc().assign(s));
-    this.laterals.dreta = this.laterals.dreta.map(s => new CastellerLloc().assign(s));
-    this.crosses.esquerra = new CastellerLloc().assign(this.crosses.esquerra);
-    this.crosses.dreta = new CastellerLloc().assign(this.crosses.dreta);
+    this.agulla = this.agulla ? new CastellerLloc().assign(this.agulla) : null;
+    this.contrafort = this.contrafort ? new CastellerLloc().assign(this.contrafort) : null;
+    this.baix = this.baix ? new CastellerLloc().assign(this.baix) : null;
+    this.vents = this.vents.map(s => s ? new CastellerLloc().assign(s) : s);
+    this.mans = this.mans.map(s => s ? new CastellerLloc().assign(s): s);
+    this.laterals.esquerra = this.laterals.esquerra.map(s => s ? new CastellerLloc().assign(s) : s);
+    this.laterals.dreta = this.laterals.dreta.map(s => s ? new CastellerLloc().assign(s) : s);
+    this.crosses.esquerra = this.crosses.esquerra  ? new CastellerLloc().assign(this.crosses.esquerra) : this.crosses.esquerra;
+    this.crosses.dreta = this.crosses.dreta ? new CastellerLloc().assign(this.crosses.dreta) : this.crosses.dreta;
   }
 
 }
