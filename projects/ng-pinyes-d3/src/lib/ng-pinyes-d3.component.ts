@@ -157,8 +157,8 @@ export class NgPinyesD3Component implements OnInit {
       .attr('cx', this.rect_width / 2)
       .attr('cy', 0)
       .attr('r', 1)
-      .attr('stroke', '#FFF')
-      .attr('fill', '#FFF');
+      .attr('stroke', 'transparent')
+      .attr('fill', 'transparent');
   }
 
   private zoom() {
@@ -207,26 +207,31 @@ export class NgPinyesD3Component implements OnInit {
   private drawCrosses(container, index: number) {
     const section = this.pinya.sections[index];
     if (section.crosses) {
-      this.drawCasteller('cossesdreta' + index,
-        container,
-        [section.crosses.dreta],
-        -(this.rect_height + this.margin),
-        this.first_margin - this.rect_height /2 ,
-        false,
-        false,
-        this.rect_width,
-        this.rect_height,
-        true);
-      this.drawCasteller('cossesesquerra' + index,
-        container,
-        [section.crosses.esquerra],
-        this.rect_width + this.margin,
-        this.first_margin - this.rect_height /2 ,
-        false,
-        false,
-        this.rect_width,
-        this.rect_height,
-        true);
+
+      if (section.crosses.dreta) {
+        this.drawCasteller('cossesdreta' + index,
+          container,
+          [section.crosses.dreta],
+          -(this.rect_height + this.margin),
+          this.first_margin - this.rect_height / 2,
+          false,
+          false,
+          this.rect_width,
+          this.rect_height,
+          true);
+      }
+      if (section.crosses.esquerra) {
+        this.drawCasteller('cossesesquerra' + index,
+          container,
+          [section.crosses.esquerra],
+          this.rect_width + this.margin,
+          this.first_margin - this.rect_height / 2,
+          false,
+          false,
+          this.rect_width,
+          this.rect_height,
+          true);
+      }
     }
   }
 
