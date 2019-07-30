@@ -230,7 +230,7 @@ export class NgPinyesD3Component implements OnInit {
 
     this.drawCasteller('mans' + index,
       container,
-      section.mans,
+      section.mans.filter((c) => this.editMode || c.casteller !== null),
       0,
       (d, i) => (this.rect_height + this.margin) * (i + 2) + this.first_margin,
       this.isTextReversed(index),
@@ -243,7 +243,7 @@ export class NgPinyesD3Component implements OnInit {
 
     this.drawCasteller('vents' + index,
       container,
-      section.vents,
+      section.vents.filter((c) => this.editMode || c.casteller !== null),
       0,
       (d, i) => (this.rect_height + this.margin) * (i + 1) + this.first_margin,
       this.isTextReversed(index),
@@ -255,7 +255,7 @@ export class NgPinyesD3Component implements OnInit {
     if (section.laterals) {
       this.drawCasteller('lateralsdreta' + index,
         container_right,
-        section.laterals.dreta,
+        section.laterals.dreta.filter((c) => this.editMode || c.casteller !== null),
         0,
         (d, i) => (this.rect_height + this.margin) * (i + 3) + this.first_margin,
         this.isTextReversed(index),
@@ -264,7 +264,7 @@ export class NgPinyesD3Component implements OnInit {
 
       this.drawCasteller('lateralsesquerra' + index,
         container_left,
-        section.laterals.esquerra,
+        section.laterals.esquerra.filter((c) => this.editMode || c.casteller !== null),
         0,
         (d, i) => (this.rect_height + this.margin) * (i + 3) + this.first_margin,
         this.isTextReversed(index),
@@ -412,7 +412,7 @@ export class NgPinyesD3Component implements OnInit {
   }
 
   private getColor(d: CastellerLloc, showUnanswered = false): string {
-    return d && d.casteller ?
+    return this.editMode && d && d.casteller ?
       (d.attendance === AttendanceType.cannotAttend ? 'red' :
         (d.attendance === AttendanceType.maybe ? 'orange' :
           (d.attendance === AttendanceTypeUnanswered ? (showUnanswered ? 'yellow' : '') : ''))) : '';
