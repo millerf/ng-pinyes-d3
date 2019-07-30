@@ -412,7 +412,7 @@ export class NgPinyesD3Component implements OnInit {
   }
 
   private getColor(d: CastellerLloc, showUnanswered = false): string {
-    return this.editMode && d && d.casteller ?
+    return this.editMode && d && d.casteller && d.attendance?
       (d.attendance === AttendanceType.cannotAttend ? 'red' :
         (d.attendance === AttendanceType.maybe ? 'orange' :
           (d.attendance === AttendanceTypeUnanswered ? (showUnanswered ? 'yellow' : '') : ''))) : '';
