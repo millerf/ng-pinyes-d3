@@ -79,7 +79,7 @@ export class NgPinyesD3Component implements OnInit {
           () => this.zoom()));
     this.g = this.svg.append('g');
 
-    this.first_margin = this.rect_height * (this.pinya.sections.length - 1);
+    this.first_margin = this.rect_height * (this.pinya.isPilar ? -0.5 : (this.pinya.sections.length - 1));
 
     this.updatePinya();
   }
@@ -89,11 +89,15 @@ export class NgPinyesD3Component implements OnInit {
       this.pinya.sections.forEach((section, i) => {
         let group = this.g.append('g').attr('id', 'main' + i);
         this._add_point_filler(group);
-        this.drawAgulla(group, i);
-        this.drawBaix(group, i);
-        this.drawContrefort(group, i);
+
+        if (!(this.pinya.isPilar && i ===1)) {
+          this.drawAgulla(group, i);
+          this.drawBaix(group, i);
+          this.drawContrefort(group, i);
+          this.drawCrosses(group, i);
+        }
+
         this.drawMans(group, i);
-        this.drawCrosses(group, i);
         const group_vents = group.append('g').attr('id', 'vents' + i);
         this._add_point_filler(group_vents);
         this.drawVents(group_vents, i);
@@ -104,13 +108,15 @@ export class NgPinyesD3Component implements OnInit {
         this.drawLaterals(group_laterals_right, group_laterals_left, i);
         this.firsDraw = false;
         setTimeout(() => {
-          const angle = (2 * Math.PI / this.pinya.sections.length) * i;
-          const angle_vents = 2 * Math.PI / (this.pinya.sections.length * 2);
-          const angle_laterals = 2 * Math.PI / (this.pinya.sections.length * 4);
+          const nb_sections = this.pinya.sections.length;
+          const angle = (2 * Math.PI / nb_sections) * i;
+          const angle_vents = 2 * Math.PI / (nb_sections * 2);
+          const angle_laterals = 2 * Math.PI / (nb_sections * 4);
           group.style('transform', 'translate(' + (this.width / 2 - this.rect_width / 2) + 'px, ' + (this.height / 2) + 'px) rotate(' + this._rad_to_deg(angle) + 'deg)');
           group_vents.style('transform', 'rotate(' + this._rad_to_deg(angle_vents) + 'deg)');
           group_laterals_right.style('transform', 'rotate(' + this._rad_to_deg(angle_laterals) + 'deg)');
           group_laterals_left.style('transform', 'rotate(' + -1 * this._rad_to_deg(angle_laterals) + 'deg)');
+
         }, 50)
       });
     } else {
@@ -137,7 +143,6 @@ export class NgPinyesD3Component implements OnInit {
     } else {
       const element = d3.select('#casteller_' + id);
       element.style('fill', 'green');
-      // (element.node() as HTMLElement).dispatchEvent(new ButtonEvent("click"));
     }
   }
 
@@ -206,7 +211,7 @@ export class NgPinyesD3Component implements OnInit {
         container,
         [section.crosses.dreta],
         -(this.rect_height + this.margin),
-        this.first_margin,
+        this.first_margin - this.rect_height /2 ,
         false,
         false,
         this.rect_width,
@@ -216,7 +221,7 @@ export class NgPinyesD3Component implements OnInit {
         container,
         [section.crosses.esquerra],
         this.rect_width + this.margin,
-        this.first_margin,
+        this.first_margin - this.rect_height /2 ,
         false,
         false,
         this.rect_width,
@@ -230,9 +235,9 @@ export class NgPinyesD3Component implements OnInit {
 
     this.drawCasteller('mans' + index,
       container,
-      section.mans.filter((c) => this.editMode || c.casteller !== null),
+      section.mans,
       0,
-      (d, i) => (this.rect_height + this.margin) * (i + 2) + this.first_margin,
+      (d, i) => (this.rect_height + this.margin) * (i + 2.5) + this.first_margin,
       this.isTextReversed(index),
       true);
   }
@@ -243,9 +248,9 @@ export class NgPinyesD3Component implements OnInit {
 
     this.drawCasteller('vents' + index,
       container,
-      section.vents.filter((c) => this.editMode || c.casteller !== null),
+      section.vents,
       0,
-      (d, i) => (this.rect_height + this.margin) * (i + 1) + this.first_margin,
+      (d, i) => (this.rect_height + this.margin) * (i + (this.pinya.isPilar ? 3 : 2)) + this.first_margin,
       this.isTextReversed(index),
       true);
   }
@@ -255,7 +260,7 @@ export class NgPinyesD3Component implements OnInit {
     if (section.laterals) {
       this.drawCasteller('lateralsdreta' + index,
         container_right,
-        section.laterals.dreta.filter((c) => this.editMode || c.casteller !== null),
+        section.laterals.dreta,
         0,
         (d, i) => (this.rect_height + this.margin) * (i + 3) + this.first_margin,
         this.isTextReversed(index),
@@ -264,7 +269,7 @@ export class NgPinyesD3Component implements OnInit {
 
       this.drawCasteller('lateralsesquerra' + index,
         container_left,
-        section.laterals.esquerra.filter((c) => this.editMode || c.casteller !== null),
+        section.laterals.esquerra,
         0,
         (d, i) => (this.rect_height + this.margin) * (i + 3) + this.first_margin,
         this.isTextReversed(index),
@@ -283,6 +288,12 @@ export class NgPinyesD3Component implements OnInit {
                         height: number | ((Casteller, number) => number) = this.rect_height,
                         width: number | ((Casteller, number) => number) = this.rect_width,
                         textVertical = false) {
+
+
+
+    if (!this.editMode && canAddNewPosition) {
+      data =  data.filter((c) => this.editMode || c.casteller !== null);
+    }
 
     let groups = container.select('g#' + unique_selector);
     if (groups.empty()) {
@@ -379,7 +390,7 @@ export class NgPinyesD3Component implements OnInit {
         const _y = (typeof y == 'function' ? y(d, i) : y) +
           (typeof height == 'function' ? height(d, i) : height) / 2;
         return !textVertical ? (
-          textReversed ? 'rotate(180, ' + _x + ', ' + _y + ')' : '') :
+            textReversed ? 'rotate(180, ' + _x + ', ' + _y + ')' : '') :
           'rotate(90, ' + _x + ', ' + _y + ')';
       });
 
@@ -412,7 +423,7 @@ export class NgPinyesD3Component implements OnInit {
   }
 
   private getColor(d: CastellerLloc, showUnanswered = false): string {
-    return this.editMode && d && d.casteller && d.attendance?
+    return this.editMode && d && d.casteller && d.attendance ?
       (d.attendance === AttendanceType.cannotAttend ? 'red' :
         (d.attendance === AttendanceType.maybe ? 'orange' :
           (d.attendance === AttendanceTypeUnanswered ? (showUnanswered ? 'yellow' : '') : ''))) : '';

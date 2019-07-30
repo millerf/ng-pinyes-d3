@@ -54,6 +54,7 @@ export class AssignedObject extends AssignedObjectWithoutPk {
 export class PinyaCastell extends AssignedObject {
   sections: SectionPinya[] = [];
   name: string = null;
+  isPilar = false;
 
   protected afterAssign() {
     super.afterAssign();
