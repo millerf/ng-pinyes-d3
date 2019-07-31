@@ -4,7 +4,8 @@
   "lib": {
     "entryFile": "src/public-api.ts",
     "umdModuleIds": {
-      "d3": "d3"
+      "d3": "d3",
+      "d3plus-text": "d3plus-text"
     }
   }
 }
