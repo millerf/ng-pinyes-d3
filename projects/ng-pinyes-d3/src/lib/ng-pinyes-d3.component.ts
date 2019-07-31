@@ -1,5 +1,8 @@
 import {ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import * as d3 from "d3";
+import * as d3plus from "d3plus-text"
+
+
 import {AttendanceType, AttendanceTypeUnanswered, CastellerLloc, PinyaCastell} from './pinya.model';
 
 @Component({
@@ -90,7 +93,7 @@ export class NgPinyesD3Component implements OnInit {
         let group = this.g.append('g').attr('id', 'main' + i);
         this._add_point_filler(group);
 
-        if (!(this.pinya.isPilar && i ===1)) {
+        if (!(this.pinya.isPilar && i === 1)) {
           this.drawAgulla(group, i);
           this.drawBaix(group, i);
           this.drawContrefort(group, i);
@@ -125,11 +128,13 @@ export class NgPinyesD3Component implements OnInit {
         let group_vents = this.g.select('g#vents' + i);
         let group_laterals_right = this.g.select('g#lateralsright' + i);
         let group_laterals_left = this.g.select('g#lateralsleft' + i);
-        this.drawAgulla(group, i);
-        this.drawBaix(group, i);
-        this.drawContrefort(group, i);
+        if (!(this.pinya.isPilar && i === 1)) {
+          this.drawAgulla(group, i);
+          this.drawBaix(group, i);
+          this.drawCrosses(group, i);
+          this.drawContrefort(group, i);
+        }
         this.drawMans(group, i);
-        this.drawCrosses(group, i);
         this.drawVents(group_vents, i);
         this.drawLaterals(group_laterals_right, group_laterals_left, i);
       });
@@ -295,9 +300,8 @@ export class NgPinyesD3Component implements OnInit {
                         textVertical = false) {
 
 
-
     if (!this.editMode && canAddNewPosition) {
-      data =  data.filter((c) => this.editMode || c.casteller !== null);
+      data = data.filter((c) => this.editMode || c.casteller !== null);
     }
 
     let groups = container.select('g#' + unique_selector);
@@ -356,48 +360,23 @@ export class NgPinyesD3Component implements OnInit {
       .style('stroke', (d) => this.getColor(d, true) || this.strokeColor)
       .style('stroke-width', this.strokeWidth);
 
-    const texts = groups.selectAll('text')
-      .data(data);
 
-    //Remove old
-    texts.exit().remove();
-
-    // Update exiting
-    texts
-      .style('fill', (d) => this.getColor(d))
-      .text((d: CastellerLloc) => {
-        return d.casteller ? d.casteller.getName() : null;
-      });
-
-
-    // Create new
-    texts
-      .enter()
-      .append('text')
-      .attr('x', (d, i) => {
-        return (typeof x == 'function' ? x(d, i) : x) +
-          (typeof width == 'function' ? width(d, i) : width) / 2;
-      })
-      .attr('y', (d, i) => {
-        return (typeof y == 'function' ? y(d, i) : y) +
-          (typeof height == 'function' ? height(d, i) : height) / 2;
-      })
-      .attr('text-anchor', 'middle')
-      .style('fill', (d) => this.getColor(d))
-      .style('user-select', 'none')
-      .text((d: CastellerLloc) => {
-        return d.casteller ? d.casteller.getName() : null;
-      })
-      .attr('transform', (d, i) => {
-        const _x = (typeof x == 'function' ? x(d, i) : x) +
-          (typeof width == 'function' ? width(d, i) : width) / 2;
-
-        const _y = (typeof y == 'function' ? y(d, i) : y) +
-          (typeof height == 'function' ? height(d, i) : height) / 2;
-        return !textVertical ? (
-            textReversed ? 'rotate(180, ' + _x + ', ' + _y + ')' : '') :
-          'rotate(90, ' + _x + ', ' + _y + ')';
-      });
+    new d3plus.TextBox()
+      .data(data)
+      .text(d => d.casteller ? d.casteller.getName() : '')
+      .verticalAlign('middle')
+      .textAnchor('middle')
+      .padding(10)
+      .fontResize(true)
+      .rotate(() => !textVertical ? (
+        textReversed ? 180 : 0) : 90)
+      .x(x)
+      .y(y)
+      .fontMax(14)
+      .height(this.rect_height)
+      .width(this.rect_width)
+      .select('g#' + unique_selector)
+      .render();
 
 
     const rectangles_click = groups.selectAll('rect.casteller_click')
