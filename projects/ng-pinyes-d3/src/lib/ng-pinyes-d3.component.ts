@@ -15,10 +15,10 @@ import {AttendanceType, AttendanceTypeUnanswered, CastellerLloc, PinyaCastell} f
 export class NgPinyesD3Component implements OnInit {
   g;
   svg;
-  width = 960;
-  height = 960;
+  @Input() width = 960;
+  @Input() height = 960;
   @Input() fillColor = '#FFF';
-  @Input() strokeColor = '911305';
+  @Input() strokeColor = '#911305';
   @Input() strokeWidth = 2;
   @Input() borderCurve = 5;
 
@@ -91,7 +91,6 @@ export class NgPinyesD3Component implements OnInit {
     if (this.firsDraw) {
       this.pinya.sections.forEach((section, i) => {
         let group = this.g.append('g').attr('id', 'main' + i);
-        this._add_point_filler(group);
 
         if (!(this.pinya.isPilar && i === 1)) {
           this.drawAgulla(group, i);
@@ -102,25 +101,23 @@ export class NgPinyesD3Component implements OnInit {
 
         this.drawMans(group, i);
         const group_vents = group.append('g').attr('id', 'vents' + i);
-        this._add_point_filler(group_vents);
         this.drawVents(group_vents, i);
         const group_laterals_left = group.append('g').attr('id', 'lateralsleft' + i);
-        this._add_point_filler(group_laterals_left);
         const group_laterals_right = group.append('g').attr('id', 'lateralsright' + i);
-        this._add_point_filler(group_laterals_right);
         this.drawLaterals(group_laterals_right, group_laterals_left, i);
         this.firsDraw = false;
-        setTimeout(() => {
-          const nb_sections = this.pinya.sections.length;
-          const angle = (2 * Math.PI / nb_sections) * i;
-          const angle_vents = 2 * Math.PI / (nb_sections * 2);
-          const angle_laterals = 2 * Math.PI / (nb_sections * 4);
-          group.style('transform', 'translate(' + (this.width / 2 - this.rect_width / 2) + 'px, ' + (this.height / 2) + 'px) rotate(' + this._rad_to_deg(angle) + 'deg)');
-          group_vents.style('transform', 'rotate(' + this._rad_to_deg(angle_vents) + 'deg)');
-          group_laterals_right.style('transform', 'rotate(' + this._rad_to_deg(angle_laterals) + 'deg)');
-          group_laterals_left.style('transform', 'rotate(' + -1 * this._rad_to_deg(angle_laterals) + 'deg)');
-
-        }, 50)
+        
+        const nb_sections = this.pinya.sections.length;
+        const angle = (2 * Math.PI / nb_sections) * i;
+        const angle_vents = 2 * Math.PI / (nb_sections * 2);
+        const angle_laterals = 2 * Math.PI / (nb_sections * 4);
+        group.style('transform', 'translate(' + (this.width / 2 - this.rect_width / 2) + 'px, ' + (this.height / 2) + 'px) rotate(' + this._rad_to_deg(angle) + 'deg)');
+        group.style('transform-origin', this.rect_width / 2 + 'px 0');
+        group_vents.style('transform', 'rotate(' + this._rad_to_deg(angle_vents) + 'deg)');
+        group_vents.style('transform-origin', this.rect_width / 2 + 'px 0');
+        group_laterals_left.style('transform', 'rotate(' + -1 * this._rad_to_deg(angle_laterals) + 'deg)');
+        group_laterals_right.style('transform', 'rotate(' + this._rad_to_deg(angle_laterals) + 'deg)');
+        group_laterals_left.style('transform-origin', this.rect_width + 'px 0');
       });
     } else {
       this.pinya.sections.forEach((section, i) => {
@@ -153,17 +150,6 @@ export class NgPinyesD3Component implements OnInit {
 
   private _rad_to_deg(ang_rad: number): number {
     return ang_rad / Math.PI * 180;
-  }
-
-  private _add_point_filler(container) {
-    container.style('transform-origin', 'top center');
-    container.style('transform-box', 'fill-box');
-    container.append('circle')
-      .attr('cx', this.rect_width / 2)
-      .attr('cy', 0)
-      .attr('r', 1)
-      .attr('stroke', 'transparent')
-      .attr('fill', 'transparent');
   }
 
   private zoom() {
@@ -368,13 +354,13 @@ export class NgPinyesD3Component implements OnInit {
       .textAnchor('middle')
       .padding(10)
       .fontResize(true)
-      .rotate(() => !textVertical ? (
-        textReversed ? 180 : 0) : 90)
+      .rotateAnchor(d => textVertical ? [d.h / 2, d.h / 2] : [d.w / 2, d.h / 2])
+      .rotate(() => textVertical ? 90 : (textReversed ? 180 : 0))
       .x(x)
       .y(y)
       .fontMax(14)
-      .height(this.rect_height)
-      .width(this.rect_width)
+      .height(textVertical ? width : height)
+      .width(textVertical ? height : width)
       .select('g#' + unique_selector)
       .render();
 
