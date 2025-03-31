@@ -155,5 +155,8 @@
         }
       }
     }},
-  "defaultProject": "ng-pinyes-d3-app"
+  "defaultProject": "ng-pinyes-d3-app",
+  "cli": {
+    "analytics": false
+  }
 }
